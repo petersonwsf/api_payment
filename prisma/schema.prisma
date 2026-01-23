@@ -1,0 +1,35 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CaptureMethod {
+  AUTOMATIC
+  MANUAL
+}
+
+enum PaymentStatus {
+  CREATED
+  REQUIRES_ACTION
+  AUTHORIZED
+  CAPTURED
+  CANCELED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id                    Int @id @default(autoincrement())
+  reservationId         Int
+  stripePaymentIntentId String @unique
+  amountAuthorized      Int
+  amountCaptured        Int    @default(0)
+  status                PaymentStatus
+  captureMethod         CaptureMethod
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
