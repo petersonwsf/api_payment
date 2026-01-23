@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  postgresql:
+    image: bitnami/postgresql:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRESQL_USERNAME=root
+      - POSTGRESQL_PASSWORD=root
+      - POSTGRESQL_DATABASE=paymentService
+    volumes:
+      - postgres_data_payment:/bitnami/postgresql
+
+volumes:
+  postgres_data_payment:
+    driver: local
