@@ -1,9 +1,9 @@
 import { BadRequestException, Body, Controller, HttpCode, Inject, Post } from '@nestjs/common';
-import type { CreatePaymentIntent } from 'src/dtos/CreatePaymentIntent';
+import type { CreatePaymentIntent } from 'src/modules/payment/dtos/CreatePaymentIntent';
 import Stripe from 'stripe';
 import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
 import * as zod from 'zod'
-import { PaymentCreateService } from 'src/service/PaymentCreateService';
+import { PaymentCreateService } from '../service/PaymentCreateService';
 
 @Controller('payment')
 export class PaymentController {
