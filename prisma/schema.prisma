@@ -33,3 +33,32 @@ model Payment {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
+
+enum WebhookProcessStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+  IGNORED
+}
+
+model StripeWebhookEvent {
+  id              Int    @id @default(autoincrement())
+  stripeEventId   String @unique
+  type            String
+  apiVersion      String?
+  livemode        Boolean @default(false)
+  requestId       String?
+  idempotencyId   String?
+  paymentIntentId String?
+  reservationId   Int?
+  payload         Json
+  receivedAt      DateTime @default(now())
+  processedAt     DateTime? 
+  status          WebhookProcessStatus @default(RECEIVED)
+  errorMessage    String?
+
+  @@index([type])
+  @@index([paymentIntentId])
+  @@index([reservationId])
+  @@index([status, receivedAt])
+}
