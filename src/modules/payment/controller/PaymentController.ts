@@ -1,9 +1,10 @@
 import { BadRequestException, Body, Controller, HttpCode, Inject, Post } from '@nestjs/common';
-import type { CreatePaymentIntent } from 'src/dtos/CreatePaymentIntent';
+import type { CreatePaymentIntent } from 'src/modules/payment/dtos/CreatePaymentIntent';
 import Stripe from 'stripe';
 import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
 import * as zod from 'zod'
-import { PaymentCreateService } from 'src/service/PaymentCreateService';
+import { PaymentCreateService } from '../service/PaymentCreateService';
+import { AmountZero } from '../domain/errors/AmountZero.error';
 
 @Controller('payment')
 export class PaymentController {
@@ -14,10 +15,13 @@ export class PaymentController {
     @HttpCode(201)
     async createPaymentIntent(@Body() data: CreatePaymentIntent) {
         try {
-            await this.createService.execute(data)
+            const payment = await this.createService.execute(data)
+            return {payment}
         } catch (error) {
             if (error instanceof zod.ZodError) {
-                throw new BadRequestException({message: "Problema de validação"})
+                throw new BadRequestException({message: "Dados inválidos"})
+            } else if (error instanceof AmountZero) {
+                throw new BadRequestException({message: error.message})
             }
         }
     }
