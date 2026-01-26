@@ -28,6 +28,7 @@ model Payment {
   stripePaymentIntentId String @unique
   amountAuthorized      Int
   amountCaptured        Int    @default(0)
+  currency              String @default("brl")
   status                PaymentStatus
   captureMethod         CaptureMethod
   createdAt             DateTime @default(now())

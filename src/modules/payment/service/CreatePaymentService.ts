@@ -18,7 +18,7 @@ interface IRequest {
 }
 
 @Injectable()
-export class PaymentCreateService {
+export class CreatePaymentService {
     constructor (@Inject(STRIPE_CLIENT) private readonly stripe: Stripe, 
                 private readonly repository : PaymentRepository) {}
     

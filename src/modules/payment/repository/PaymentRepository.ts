@@ -9,4 +9,25 @@ export class PaymentRepository implements IPaymentRepository {
         const payment = await prisma.payment.create({ data });
         return payment;
     }
+
+    async findReservationPayments( reservationId : number ) {
+        const payments = await prisma.payment.findMany({
+            where: {
+                reservationId,
+                status: {
+                    in: ['CREATED', 'AUTHORIZED', 'REQUIRES_ACTION']
+                }
+            }
+        })
+        return payments
+    }
+
+    async findPaymentById( id : number ) {
+        const payment = await prisma.payment.findFirst({
+            where: { 
+                id
+            }
+        })
+        return payment
+    }
 }
