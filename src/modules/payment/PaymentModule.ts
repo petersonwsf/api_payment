@@ -7,12 +7,14 @@ import { env } from 'process';
 import { PaymentRepository } from './repository/PaymentRepository';
 import { FindPaymentByReservationService } from './service/FindPaymentByReservationService';
 import { FindPaymentByIdService } from './service/FindPaymentByIdService';
+import { RefundPaymentService } from './service/RefundPaymentService';
 
 @Module({
     providers: [
         CreatePaymentService,
         FindPaymentByReservationService,
         FindPaymentByIdService,
+        RefundPaymentService,
         PaymentRepository,
         {provide: STRIPE_CLIENT,
         useFactory: () => new Stripe(env.STRIPE_SECRET_KEY ?? '', {

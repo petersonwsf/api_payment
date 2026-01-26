@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, Inject, NotFoundException, Param, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, Inject, NotFoundException, Param, Post } from '@nestjs/common';
 import type { CreatePaymentIntent } from 'src/modules/payment/dtos/CreatePaymentIntent';
 import * as zod from 'zod'
 import { CreatePaymentService } from '../service/CreatePaymentService';
@@ -8,12 +8,15 @@ import { ReservationPaymentNotFound } from '../domain/errors/ReservationPaymentN
 import { InvalidId } from '../domain/errors/InvalidId';
 import { FindPaymentByIdService } from '../service/FindPaymentByIdService';
 import { PaymentNotFound } from '../domain/errors/PaymentNotFound';
+import { RefundPaymentService } from '../service/RefundPaymentService';
+import { PaymentCannotBeRefunded } from '../domain/errors/PaymentCannotBeRefunded';
 
 @Controller('payment')
 export class PaymentController {
     constructor(private readonly createService: CreatePaymentService,
                 private readonly findPaymentByReservationService : FindPaymentByReservationService,
-                private readonly findPaymentByIdService : FindPaymentByIdService) {}
+                private readonly findPaymentByIdService : FindPaymentByIdService,
+                private readonly refundPaymentService : RefundPaymentService) {}
 
     @Post()
     @HttpCode(201)
@@ -52,6 +55,19 @@ export class PaymentController {
         } catch (error) {
             if (error instanceof ReservationPaymentNotFound) throw new NotFoundException(error.message)
             if (error instanceof InvalidId) throw new BadRequestException(error.message)
+        }
+    }
+
+    @Delete(':id')
+    @HttpCode(200)
+    async refundPayment(@Param() params : { id : string }) {
+        try {
+            const refund = await this.refundPaymentService.execute(params.id)
+            return refund
+        } catch (error) {
+            if (error instanceof InvalidId) throw new BadRequestException(error.message)
+            if (error instanceof PaymentNotFound) throw new NotFoundException(error.message)
+            if (error instanceof PaymentCannotBeRefunded) throw new ForbiddenException(error.message)
         }
     }
 }

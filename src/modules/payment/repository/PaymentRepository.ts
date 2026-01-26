@@ -30,4 +30,11 @@ export class PaymentRepository implements IPaymentRepository {
         })
         return payment
     }
+
+    async refundPayment( id : number ) {
+        await prisma.payment.update({
+            where: { id },
+            data: { status: 'REFUNDED' }
+        })
+    }
 }

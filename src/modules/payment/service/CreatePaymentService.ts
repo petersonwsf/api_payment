@@ -12,7 +12,7 @@ import { PaymentRepository } from "../repository/PaymentRepository";
 interface IRequest {
     reservationId: number;
     amount: number;
-    method: PaymentMethod;
+    method?: PaymentMethod;
     currency?: Currency;
     customerEmail?: string;
 }

@@ -4,7 +4,7 @@ import { PaymentMethod } from "../domain/enums/PaymentMethod";
 export interface CreatePaymentIntent {
     reservationId: number;
     amount: number;
-    method: PaymentMethod;
+    method?: PaymentMethod;
     currency?: Currency;
     customerEmail?: string;
 }
