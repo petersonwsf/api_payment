@@ -1,18 +1,21 @@
 import { Inject, Injectable } from "@nestjs/common";
 import * as z from 'zod'
 import { AmountZero } from "../domain/errors/AmountZero.error";
-import { PaymentMethod } from "../domain/enums/PaymentMethod";
 import { Currency } from "../domain/enums/Currency";
 import Stripe from "stripe";
 import { STRIPE_CLIENT } from "src/config/stripe/stripe";
 import { Prisma } from "@prisma/client";
 import { PaymentStatus, CaptureMethod } from "@prisma/client";
 import { PaymentRepository } from "../repository/PaymentRepository";
+import { Method } from "../domain/enums/Method";
+import { PaymentMethodService } from "../dtos/PaymentMethodService";
+import { CardPayment } from "./CardPayment";
+import { BoletoPayment } from "./BoletoPayment";
 
 interface IRequest {
     reservationId: number;
     amount: number;
-    method?: PaymentMethod;
+    method?: Method;
     currency?: Currency;
     customerEmail?: string;
 }
@@ -23,10 +26,13 @@ export class CreatePaymentService {
                 private readonly repository : PaymentRepository) {}
     
     async execute(data: IRequest) {
+        
+        let paymentMethod : PaymentMethodService = new CardPayment(this.stripe)
+
         const schemaValidation = z.object({
             reservationId: z.number(),
             amount: z.number(),
-            method: z.string(),
+            method: z.enum(Method),
             currency: z.string().optional(),
             customerEmail: z.string().optional()
         })
@@ -37,17 +43,11 @@ export class CreatePaymentService {
 
         const valueInCents = Math.round(dataValid.amount * 100);
 
-        const paymentIntent = await this.stripe.paymentIntents.create({
-            amount: valueInCents,
-            currency: dataValid.currency ?? 'brl',
-            capture_method: 'manual',
-            automatic_payment_methods: {
-                enabled: true
-            },
-            metadata: {
-                reservationId: String(dataValid.reservationId)
-            }
-        })
+        dataValid.amount = valueInCents
+
+        if (dataValid.method == 'boleto') paymentMethod = new BoletoPayment(this.stripe)
+
+        const paymentIntent : Stripe.Response<Stripe.PaymentIntent> = await paymentMethod.createPayment(dataValid);
 
         const paymentData : Prisma.PaymentCreateInput = {
             reservationId: dataValid.reservationId,
@@ -60,6 +60,9 @@ export class CreatePaymentService {
 
         const payment = await this.repository.create(paymentData);
 
-        return payment;
+        return {
+            clientSecret: paymentIntent.client_secret,
+            ...payment
+        };
     }
 }
