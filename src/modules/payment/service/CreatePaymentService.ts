@@ -27,7 +27,7 @@ export class CreatePaymentService {
     
     async execute(data: IRequest) {
         
-        let paymentMethod : PaymentMethodService = new CardPayment(this.stripe)
+        let paymentMethod : PaymentMethodService;
 
         const schemaValidation = z.object({
             reservationId: z.number(),
@@ -45,7 +45,10 @@ export class CreatePaymentService {
 
         dataValid.amount = valueInCents
 
-        if (dataValid.method == 'boleto') paymentMethod = new BoletoPayment(this.stripe)
+        if ( dataValid.method == 'boleto' ) paymentMethod = new BoletoPayment(this.stripe)
+        else paymentMethod = new CardPayment(this.stripe)
+
+        const captureMethod = paymentMethod instanceof CardPayment ? CaptureMethod.MANUAL : CaptureMethod.AUTOMATIC
 
         const paymentIntent : Stripe.Response<Stripe.PaymentIntent> = await paymentMethod.createPayment(dataValid);
 
@@ -55,7 +58,7 @@ export class CreatePaymentService {
             amountAuthorized: valueInCents,
             amountCaptured: 0,
             status: PaymentStatus.CREATED,
-            captureMethod: CaptureMethod.MANUAL,
+            captureMethod: captureMethod,
         }
 
         const payment = await this.repository.create(paymentData);

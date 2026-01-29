@@ -27,7 +27,7 @@ export class RefundPaymentService {
         
         await this.stripe.paymentIntents.cancel(payment.stripePaymentIntentId)
 
-        await this.repository.refundPayment(Number(id))
+        await this.repository.update(Number(id), {status : 'REFUNDED'})
 
         return {
             id: payment.id,
