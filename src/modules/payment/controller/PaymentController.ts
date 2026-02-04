@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, NotFoundException, Param, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
 import type { CreatePaymentIntent } from 'src/modules/payment/dtos/CreatePaymentIntent';
 import * as zod from 'zod'
 import { AmountZero } from '../domain/errors/AmountZero.error';
@@ -12,7 +12,9 @@ import { PaymentCannotBeCaptured } from '../domain/errors/PaymentCannotBeCapture
 import { ValueAbovePermitted } from '../domain/errors/ValueAbovePermitted';
 import { StripeError } from '../domain/errors/StripeError';
 import { PaymentService } from '../service/PaymentService';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('payment')
 export class PaymentController {
     constructor(private readonly service : PaymentService) {}
