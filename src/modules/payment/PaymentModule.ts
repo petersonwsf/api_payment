@@ -8,6 +8,7 @@ import { PaymentRepository } from './repository/PaymentRepository';
 import { FindPaymentByReservationService } from './service/FindPaymentByReservationService';
 import { FindPaymentByIdService } from './service/FindPaymentByIdService';
 import { RefundPaymentService } from './service/RefundPaymentService';
+import { AmountCaptureService } from './service/AmountCaptureService';
 
 @Module({
     providers: [
@@ -15,6 +16,7 @@ import { RefundPaymentService } from './service/RefundPaymentService';
         FindPaymentByReservationService,
         FindPaymentByIdService,
         RefundPaymentService,
+        AmountCaptureService,
         PaymentRepository,
         {provide: STRIPE_CLIENT,
         useFactory: () => new Stripe(env.STRIPE_SECRET_KEY ?? '', {
