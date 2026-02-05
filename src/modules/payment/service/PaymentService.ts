@@ -4,6 +4,9 @@ import { AmountCaptureService } from "./AmountCaptureService";
 import { RefundPaymentService } from "./RefundPaymentService";
 import { FindPaymentByIdService } from "./FindPaymentByIdService";
 import { FindPaymentByReservationService } from "./FindPaymentByReservationService";
+import { CreatePaymentIntent } from "../dtos/CreatePaymentIntent";
+import { UserDTO } from "../dtos/UserDTO";
+import { PaymentCaptureDTO } from "../dtos/PaymentCaptureDTO";
 
 @Injectable()
 export class PaymentService {
@@ -15,7 +18,7 @@ export class PaymentService {
         private readonly capturePaymentService : AmountCaptureService
     ) {}
 
-    async create(data: any) {
+    async create(data: CreatePaymentIntent) {
         return await this.createService.execute(data);
     }
 
@@ -27,11 +30,11 @@ export class PaymentService {
         return await this.findPaymentByReservationService.execute(reservationId);
     }
 
-    async refund(id: string) {
-        return await this.refundPaymentService.execute(id);
+    async refund(data : { id: string, user: UserDTO }) {
+        return await this.refundPaymentService.execute(data);
     }
 
-    async capture(data: any) {
+    async capture(data: PaymentCaptureDTO) {
         return await this.capturePaymentService.execute(data);
     }
 }

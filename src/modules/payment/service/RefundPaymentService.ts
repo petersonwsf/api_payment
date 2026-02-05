@@ -7,6 +7,13 @@ import { STRIPE_CLIENT } from "src/config/stripe/stripe";
 import Stripe from "stripe";
 import { paymentStatusForRefund } from "../domain/enums/PaymentStatusForRefund";
 import { PaymentCannotBeRefunded } from "../domain/errors/PaymentCannotBeRefunded";
+import { UserDTO } from "../dtos/UserDTO";
+import { PaymentNotBelongUser } from "../domain/errors/PaymentNotBelongUser";
+
+interface RefundData {
+    id: number | string;
+    user: UserDTO;
+}
 
 @Injectable()
 export class RefundPaymentService {
@@ -14,12 +21,21 @@ export class RefundPaymentService {
                 @Inject(STRIPE_CLIENT) private readonly stripe : Stripe 
     ) {}
 
-    async execute(id : string) : Promise<{id: number, message: string}> {
+    async execute(data : RefundData) : Promise<{id: number, message: string}> {
+        
+        const { id, user } = data
+
         if (!isNumber(id)) throw new InvalidId()
         
         const payment = await this.repository.findPaymentById(Number(id))
 
         if (!payment) throw new PaymentNotFound()
+            
+        if (user.role !== 'ADMIN') {
+            if (payment.userId !== user.id) {
+                throw new PaymentNotBelongUser()
+            }
+        }
         
         const stripePayment = await this.stripe.paymentIntents.retrieve(payment.stripePaymentIntentId)
 
@@ -27,7 +43,7 @@ export class RefundPaymentService {
         
         await this.stripe.paymentIntents.cancel(payment.stripePaymentIntentId)
 
-        await this.repository.update(Number(id), {status : 'REFUNDED'})
+        await this.repository.update(Number(id), {status : 'REFUNDED' })
 
         return {
             id: payment.id,

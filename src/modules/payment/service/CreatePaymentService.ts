@@ -11,27 +11,21 @@ import { Method } from "../domain/enums/Method";
 import { PaymentMethodService } from "../dtos/PaymentMethodService";
 import { CardPayment } from "./CardPayment";
 import { BoletoPayment } from "./BoletoPayment";
-
-interface IRequest {
-    reservationId: number;
-    amount: number;
-    method?: Method;
-    currency?: Currency;
-    customerEmail?: string;
-}
+import { CreatePaymentIntent } from "../dtos/CreatePaymentIntent";
 
 @Injectable()
 export class CreatePaymentService {
     constructor (@Inject(STRIPE_CLIENT) private readonly stripe: Stripe, 
                 private readonly repository : PaymentRepository) {}
     
-    async execute(data: IRequest) {
+    async execute(data: CreatePaymentIntent) {
         
         let paymentMethod : PaymentMethodService;
 
         const schemaValidation = z.object({
             reservationId: z.number(),
             amount: z.number(),
+            userId: z.number().int(),
             method: z.enum(Method),
             currency: z.string().optional(),
             customerEmail: z.string().optional()
@@ -55,6 +49,7 @@ export class CreatePaymentService {
         const paymentData : Prisma.PaymentCreateInput = {
             reservationId: dataValid.reservationId,
             stripePaymentIntentId: paymentIntent.id,
+            userId: dataValid.userId,
             amountAuthorized: valueInCents,
             amountCaptured: 0,
             status: PaymentStatus.CREATED,
