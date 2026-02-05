@@ -25,6 +25,7 @@ enum PaymentStatus {
 model Payment {
   id                    Int @id @default(autoincrement())
   reservationId         Int
+  userId                Int
   stripePaymentIntentId String @unique
   amountAuthorized      Int
   amountCaptured        Int    @default(0)
