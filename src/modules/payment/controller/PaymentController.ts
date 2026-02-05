@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, NotFoundException, Param, Post, Req, UseGuards } from '@nestjs/common';
 import type { CreatePaymentIntent } from 'src/modules/payment/dtos/CreatePaymentIntent';
 import * as zod from 'zod'
 import { AmountZero } from '../domain/errors/AmountZero.error';
@@ -13,6 +13,7 @@ import { ValueAbovePermitted } from '../domain/errors/ValueAbovePermitted';
 import { StripeError } from '../domain/errors/StripeError';
 import { PaymentService } from '../service/PaymentService';
 import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('payment')
@@ -61,9 +62,10 @@ export class PaymentController {
 
     @Delete(':id')
     @HttpCode(200)
-    async refundPayment(@Param() params : { id : string }) {
+    async refundPayment(@Param() params : { id : string }, @Req() req : Request) {
         try {
-            const refund = await this.service.refund(params.id)
+            const user = req.user as { id: number, username: string, role: string } 
+            const refund = await this.service.refund({ id: params.id, user })
             return refund
         } catch (error) {
             if (error instanceof InvalidId) throw new BadRequestException(error.message)
@@ -75,9 +77,10 @@ export class PaymentController {
 
     @Post('/capture')
     @HttpCode(200)
-    async capturePayment(@Body() data : PaymentCaptureDTO) {
+    async capturePayment(@Body() data : PaymentCaptureDTO, @Req() req : Request) {
         try {
-            const capture = await this.service.capture(data)
+            const user = req.user as { id: number, username: string, role: string }
+            const capture = await this.service.capture({...data, user})
             return { capture }
         } catch (error) {
             if (error instanceof zod.ZodError) throw new BadRequestException("Invalid data!")

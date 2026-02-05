@@ -16,6 +16,7 @@ import { PaymentNotAuthorized } from "../domain/errors/PaymentNotAuthorized";
 import { AmountZero } from "../domain/errors/AmountZero.error";
 import { ValueAbovePermitted } from "../domain/errors/ValueAbovePermitted";
 import { StripeError } from "../domain/errors/StripeError";
+import { PaymentNotBelongUser } from "../domain/errors/PaymentNotBelongUser";
 
 @Injectable()
 export class AmountCaptureService {
@@ -26,6 +27,12 @@ export class AmountCaptureService {
 
         const validationSchema = zod.object({
             id: zod.coerce.number().int(),
+            user: zod.object({
+                id: zod.coerce.number().int(),
+                username: zod.string(),
+                role: zod.string()
+            }),
+            userId: zod.coerce.number().int(),
             amount: zod.coerce.number(),
             method: zod.nativeEnum(Method).optional()
         })
@@ -37,6 +44,10 @@ export class AmountCaptureService {
         const payment = await this.repository.findPaymentById(dataValid.id)
 
         if (!payment) throw new PaymentNotFound()
+
+        if (dataValid.user.role != 'ADMIN') {
+            if (payment.userId != dataValid.userId) throw new PaymentNotBelongUser()
+        }
         
         if (payment.captureMethod != CaptureMethod.MANUAL) throw new PaymentAutomaticCapture()
 
@@ -85,6 +96,7 @@ export class AmountCaptureService {
             const newPayment : Prisma.PaymentCreateInput = {
                 amountAuthorized : remainder,
                 currency: payment.currency,
+                userId: dataValid.userId,
                 reservationId: payment.reservationId,
                 captureMethod: captureMethod,
                 status: PaymentStatus.CREATED,
