@@ -35,14 +35,11 @@ export class ProcessWebhookService {
         }
 
         const webhook = await this.repository.create( webhookData )
-        try {
-
-            /*
-                POSTERIORMENTE VERIFICAR QUAL O TIPO DE EVENTO OCORREU PARA ENVIAR A MENSAGERIA A ATITUDE QUE O OUTRO MICROSERVIÇO DEVE TOMAR
-            */
-
-            await this.repository.processWebhook(webhook.id, 'PROCESSED')
         
+        try {
+            switch (dataEvent.type) {
+                case 'payment_intent.amount_capturable_updated':
+            }
         } catch (error) {
             await this.repository.processWebhook(webhook.id, 'FAILED', error.message)
             throw error
