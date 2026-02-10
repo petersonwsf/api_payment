@@ -2,11 +2,15 @@ import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import Stripe from "stripe";
 import { WebhookRepository } from "../repository/WebhookRepository";
+import { PaymentAuthorizedService } from "./PaymentAuthorizedService";
 
 @Injectable()
 export class ProcessWebhookService {
 
-    constructor(private readonly repository: WebhookRepository) {}
+    constructor(
+        private readonly repository: WebhookRepository,
+        private readonly paymentAuthorizedService: PaymentAuthorizedService
+    ) {}
 
     async execute(data: any) {
         
@@ -35,14 +39,13 @@ export class ProcessWebhookService {
         }
 
         const webhook = await this.repository.create( webhookData )
-        try {
-
-            /*
-                POSTERIORMENTE VERIFICAR QUAL O TIPO DE EVENTO OCORREU PARA ENVIAR A MENSAGERIA A ATITUDE QUE O OUTRO MICROSERVIÇO DEVE TOMAR
-            */
-
-            await this.repository.processWebhook(webhook.id, 'PROCESSED')
         
+        try {
+            switch (dataEvent.type) {
+                case 'payment_intent.amount_capturable_updated':
+                    this.paymentAuthorizedService.execute(webhook)
+                    break;
+            }
         } catch (error) {
             await this.repository.processWebhook(webhook.id, 'FAILED', error.message)
             throw error
