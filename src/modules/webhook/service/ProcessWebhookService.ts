@@ -3,13 +3,15 @@ import { Prisma } from "@prisma/client";
 import Stripe from "stripe";
 import { WebhookRepository } from "../repository/WebhookRepository";
 import { PaymentAuthorizedService } from "./PaymentAuthorizedService";
+import { PaymentSucceededService } from "./PaymentSucceededService";
 
 @Injectable()
 export class ProcessWebhookService {
 
     constructor(
         private readonly repository: WebhookRepository,
-        private readonly paymentAuthorizedService: PaymentAuthorizedService
+        private readonly paymentAuthorizedService: PaymentAuthorizedService,
+        private readonly paymentSucceededService: PaymentSucceededService,
     ) {}
 
     async execute(data: any) {
@@ -44,6 +46,9 @@ export class ProcessWebhookService {
             switch (dataEvent.type) {
                 case 'payment_intent.amount_capturable_updated':
                     this.paymentAuthorizedService.execute(webhook)
+                    break;
+                case 'payment_intent.succeeded':
+                    this.paymentSucceededService.execute(webhook)
                     break;
             }
         } catch (error) {
