@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { WebhookRepository } from "../repository/WebhookRepository";
 import { PaymentAuthorizedService } from "./PaymentAuthorizedService";
 import { PaymentSucceededService } from "./PaymentSucceededService";
+import { PaymentRefundedService } from "./PaymentRefundedService";
 
 @Injectable()
 export class ProcessWebhookService {
@@ -12,6 +13,7 @@ export class ProcessWebhookService {
         private readonly repository: WebhookRepository,
         private readonly paymentAuthorizedService: PaymentAuthorizedService,
         private readonly paymentSucceededService: PaymentSucceededService,
+        private readonly paymentRefundedService: PaymentRefundedService
     ) {}
 
     async execute(data: any) {
@@ -50,6 +52,10 @@ export class ProcessWebhookService {
                 case 'payment_intent.succeeded':
                     this.paymentSucceededService.execute(webhook)
                     break;
+                case 'charge.refunded':
+                    this.paymentRefundedService.execute(webhook)
+                    break;
+                
             }
         } catch (error) {
             await this.repository.processWebhook(webhook.id, 'FAILED', error.message)
