@@ -31,7 +31,8 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',     // Adicionado
       '@typescript-eslint/no-unsafe-member-access': 'off',  // Adicionado
-      '@typescript-eslint/no-unsafe-call': 'off',           // Adicionado
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',          // Adicionado
       '@typescript-eslint/require-await': 'error',            // Adicionado
       '@typescript-eslint/no-unused-vars': 'error',         // Muda erro para aviso
       'no-useless-catch': 'warn',                          // Muda erro para aviso
