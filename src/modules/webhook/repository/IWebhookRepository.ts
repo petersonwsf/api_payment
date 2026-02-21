@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client';
 
 export interface IWebhookRepository {
-    create(data: Prisma.StripeWebhookEventCreateInput)
+  create(data: Prisma.StripeWebhookEventCreateInput);
 }

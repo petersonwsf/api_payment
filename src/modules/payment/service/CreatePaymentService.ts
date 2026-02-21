@@ -1,66 +1,71 @@
-import { Inject, Injectable } from "@nestjs/common";
-import * as z from 'zod'
-import { AmountZero } from "../domain/errors/AmountZero.error";
-import { Currency } from "../domain/enums/Currency";
-import Stripe from "stripe";
-import { STRIPE_CLIENT } from "src/config/stripe/stripe";
-import { Prisma } from "@prisma/client";
-import { PaymentStatus, CaptureMethod } from "@prisma/client";
-import { PaymentRepository } from "../repository/PaymentRepository";
-import { Method } from "../domain/enums/Method";
-import { PaymentMethodService } from "../dtos/PaymentMethodService";
-import { CardPayment } from "./CardPayment";
-import { BoletoPayment } from "./BoletoPayment";
-import { CreatePaymentIntent } from "../dtos/CreatePaymentIntent";
+import { Inject, Injectable } from '@nestjs/common';
+import * as z from 'zod';
+import { AmountZero } from '../domain/errors/AmountZero.error';
+import Stripe from 'stripe';
+import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { Prisma } from '@prisma/client';
+import { PaymentStatus, CaptureMethod } from '@prisma/client';
+import { PaymentRepository } from '../repository/PaymentRepository';
+import { Method } from '../domain/enums/Method';
+import { PaymentMethodService } from '../dtos/PaymentMethodService';
+import { CardPayment } from './CardPayment';
+import { BoletoPayment } from './BoletoPayment';
+import { CreatePaymentIntent } from '../dtos/CreatePaymentIntent';
 
 @Injectable()
 export class CreatePaymentService {
-    constructor (@Inject(STRIPE_CLIENT) private readonly stripe: Stripe, 
-                private readonly repository : PaymentRepository) {}
-    
-    async execute(data: CreatePaymentIntent) {
-        
-        let paymentMethod : PaymentMethodService;
+  constructor(
+    @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
+    private readonly repository: PaymentRepository,
+  ) {}
 
-        const schemaValidation = z.object({
-            reservationId: z.number(),
-            amount: z.number(),
-            userId: z.number().int(),
-            method: z.enum(Method),
-            currency: z.string().optional(),
-            customerEmail: z.string().optional()
-        })
+  async execute(data: CreatePaymentIntent) {
+    let paymentMethod: PaymentMethodService;
 
-        const dataValid = schemaValidation.parse(data)
+    const schemaValidation = z.object({
+      reservationId: z.number(),
+      amount: z.number(),
+      userId: z.number().int(),
+      method: z.enum(Method),
+      currency: z.string().optional(),
+      customerEmail: z.string().optional(),
+    });
 
-        if (dataValid.amount <= 0) throw new AmountZero();
+    const dataValid = schemaValidation.parse(data);
 
-        const valueInCents = Math.round(dataValid.amount * 100);
+    if (dataValid.amount <= 0) throw new AmountZero();
 
-        dataValid.amount = valueInCents
+    const valueInCents = Math.round(dataValid.amount * 100);
 
-        if ( dataValid.method == 'boleto' ) paymentMethod = new BoletoPayment(this.stripe)
-        else paymentMethod = new CardPayment(this.stripe)
+    dataValid.amount = valueInCents;
 
-        const captureMethod = paymentMethod instanceof CardPayment ? CaptureMethod.MANUAL : CaptureMethod.AUTOMATIC
+    if (dataValid.method == Method.BOLETO)
+      paymentMethod = new BoletoPayment(this.stripe);
+    else paymentMethod = new CardPayment(this.stripe);
 
-        const paymentIntent : Stripe.Response<Stripe.PaymentIntent> = await paymentMethod.createPayment(dataValid);
+    const captureMethod =
+      paymentMethod instanceof CardPayment
+        ? CaptureMethod.MANUAL
+        : CaptureMethod.AUTOMATIC;
 
-        const paymentData : Prisma.PaymentCreateInput = {
-            reservationId: dataValid.reservationId,
-            stripePaymentIntentId: paymentIntent.id,
-            userId: dataValid.userId,
-            amountAuthorized: valueInCents,
-            amountCaptured: 0,
-            status: PaymentStatus.CREATED,
-            captureMethod: captureMethod,
-        }
+    const paymentIntent: Stripe.Response<Stripe.PaymentIntent> =
+      await paymentMethod.createPayment(dataValid);
 
-        const payment = await this.repository.create(paymentData);
+    const paymentData: Prisma.PaymentCreateInput = {
+      reservationId: dataValid.reservationId,
+      stripePaymentIntentId: paymentIntent.id,
+      userId: dataValid.userId,
+      amountAuthorized: valueInCents,
+      amountCaptured: 0,
+      status: PaymentStatus.CREATED,
+      captureMethod: captureMethod,
+    };
 
-        return {
-            clientSecret: paymentIntent.client_secret,
-            ...payment
-        };
-    }
+    const payment = await this.repository.create(paymentData);
+
+    return {
+      clientSecret: paymentIntent.client_secret,
+      ...payment,
+    };
+  }
 }

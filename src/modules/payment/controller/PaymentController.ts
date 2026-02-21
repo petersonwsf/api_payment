@@ -1,6 +1,19 @@
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, NotFoundException, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  NotFoundException,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import type { CreatePaymentIntent } from 'src/modules/payment/dtos/CreatePaymentIntent';
-import * as zod from 'zod'
+import * as zod from 'zod';
 import { AmountZero } from '../domain/errors/AmountZero.error';
 import { ReservationPaymentNotFound } from '../domain/errors/ReservationPaymentNotFound';
 import { InvalidId } from '../domain/errors/InvalidId';
@@ -18,80 +31,96 @@ import type { Request } from 'express';
 @UseGuards(AuthGuard('jwt'))
 @Controller('payment')
 export class PaymentController {
-    constructor(private readonly service : PaymentService) {}
+  constructor(private readonly service: PaymentService) {}
 
-    @Post()
-    @HttpCode(201)
-    async createPaymentIntent(@Body() data: CreatePaymentIntent) {
-        try {
-            const payment = await this.service.create(data)
-            return { payment }
-        } catch (error) {
-            if (error instanceof zod.ZodError) throw new BadRequestException({message: "Dados inválidos"})
-            if (error instanceof AmountZero) throw new BadRequestException({message: error.message})
-            throw Error("Unhandled error!")
-        }
+  @Post()
+  @HttpCode(201)
+  async createPaymentIntent(@Body() data: CreatePaymentIntent) {
+    try {
+      const payment = await this.service.create(data);
+      return { payment };
+    } catch (error) {
+      if (error instanceof zod.ZodError)
+        throw new BadRequestException({ message: 'Dados inválidos' });
+      if (error instanceof AmountZero)
+        throw new BadRequestException({ message: error.message });
+      throw Error('Unhandled error!');
     }
+  }
 
-    @Get(':id')
-    @HttpCode(200)
-    async findPaymentById(@Param() params : { id : string }) {
-        try {
-            const payment = await this.service.findById(params.id)
-            return payment
-        } catch (error) {
-            if (error instanceof InvalidId) throw new BadRequestException(error.message)
-            if (error instanceof PaymentNotFound) throw new NotFoundException(error.message)
-            throw Error("Unhandled error!")
-        }
+  @Get(':id')
+  @HttpCode(200)
+  async findPaymentById(@Param() params: { id: string }) {
+    try {
+      const payment = await this.service.findById(params.id);
+      return payment;
+    } catch (error) {
+      if (error instanceof InvalidId)
+        throw new BadRequestException(error.message);
+      if (error instanceof PaymentNotFound)
+        throw new NotFoundException(error.message);
+      throw Error('Unhandled error!');
     }
+  }
 
-    @Get('reservation/:reservationId')
-    @HttpCode(200)
-    async findPaymentByReservationId(@Param() params: { reservationId: string }) {
-        try {
-            const reservationId = params.reservationId
-            const payments = await this.service.findByReservationId(reservationId)
-            return payments
-        } catch (error) {
-            if (error instanceof ReservationPaymentNotFound) throw new NotFoundException(error.message)
-            if (error instanceof InvalidId) throw new BadRequestException(error.message)
-            throw Error("Unhandled error!")
-        }
+  @Get('reservation/:reservationId')
+  @HttpCode(200)
+  async findPaymentByReservationId(@Param() params: { reservationId: string }) {
+    try {
+      const reservationId = params.reservationId;
+      const payments = await this.service.findByReservationId(reservationId);
+      return payments;
+    } catch (error) {
+      if (error instanceof ReservationPaymentNotFound)
+        throw new NotFoundException(error.message);
+      if (error instanceof InvalidId)
+        throw new BadRequestException(error.message);
+      throw Error('Unhandled error!');
     }
+  }
 
-    @Delete(':id')
-    @HttpCode(200)
-    async refundPayment(@Param() params : { id : string }, @Req() req : Request) {
-        try {
-            const user = req.user as { id: number, username: string, role: string } 
-            const refund = await this.service.refund({ id: params.id, user })
-            return refund
-        } catch (error) {
-            if (error instanceof InvalidId) throw new BadRequestException(error.message)
-            if (error instanceof PaymentNotFound) throw new NotFoundException(error.message)
-            if (error instanceof PaymentCannotBeRefunded) throw new ForbiddenException(error.message)
-            throw Error("Unhandled error!")
-        }
+  @Delete(':id')
+  @HttpCode(200)
+  async refundPayment(@Param() params: { id: string }, @Req() req: Request) {
+    try {
+      const user = req.user as { id: number; username: string; role: string };
+      const refund = await this.service.refund({ id: params.id, user });
+      return refund;
+    } catch (error) {
+      if (error instanceof InvalidId)
+        throw new BadRequestException(error.message);
+      if (error instanceof PaymentNotFound)
+        throw new NotFoundException(error.message);
+      if (error instanceof PaymentCannotBeRefunded)
+        throw new ForbiddenException(error.message);
+      throw Error('Unhandled error!');
     }
+  }
 
-    @Post('/capture')
-    @HttpCode(200)
-    async capturePayment(@Body() data : PaymentCaptureDTO, @Req() req : Request) {
-        try {
-            const user = req.user as { id: number, username: string, role: string }
-            const capture = await this.service.capture({...data, user})
-            return { capture }
-        } catch (error) {
-            if (error instanceof zod.ZodError) throw new BadRequestException("Invalid data!")
-            if (error instanceof AmountZero) throw new BadRequestException(error.message)
-            if (error instanceof ValueAbovePermitted) throw new BadRequestException(error.message)
-            if (error instanceof BadRequestException) throw new BadRequestException(error.message)
-            if (error instanceof PaymentNotFound) throw new NotFoundException(error.message)
-            if (error instanceof PaymentAutomaticCapture) throw new ForbiddenException(error.message)
-            if (error instanceof PaymentCannotBeCaptured) throw new ForbiddenException(error.message)
-            if (error instanceof StripeError) throw new Error(error.message)
-            throw Error("Unhandled error!")
-        }
+  @Post('/capture')
+  @HttpCode(200)
+  async capturePayment(@Body() data: PaymentCaptureDTO, @Req() req: Request) {
+    try {
+      const user = req.user as { id: number; username: string; role: string };
+      const capture = await this.service.capture({ ...data, user });
+      return { capture };
+    } catch (error) {
+      if (error instanceof zod.ZodError)
+        throw new BadRequestException('Invalid data!');
+      if (error instanceof AmountZero)
+        throw new BadRequestException(error.message);
+      if (error instanceof ValueAbovePermitted)
+        throw new BadRequestException(error.message);
+      if (error instanceof BadRequestException)
+        throw new BadRequestException(error.message);
+      if (error instanceof PaymentNotFound)
+        throw new NotFoundException(error.message);
+      if (error instanceof PaymentAutomaticCapture)
+        throw new ForbiddenException(error.message);
+      if (error instanceof PaymentCannotBeCaptured)
+        throw new ForbiddenException(error.message);
+      if (error instanceof StripeError) throw new Error(error.message);
+      throw Error('Unhandled error!');
     }
+  }
 }
