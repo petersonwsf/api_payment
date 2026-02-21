@@ -4,12 +4,12 @@ import { StripeWebhookEvent } from "@prisma/client";
 import { RABBITMQ_SERVICE } from "src/config/rabbitmq/rabbitmq";
 
 @Injectable()
-export class PaymentRefundedService {
+export class PaymentCanceledService {
     
     constructor(@Inject(RABBITMQ_SERVICE) private readonly rabbitmq: ClientProxy) {}
     
     async execute(data: StripeWebhookEvent) {
-        const { reservationId, payload } = data
+        const { reservationId , payload } = data
         this.rabbitmq.emit('reservation_canceled', { reservationId, payload })
     }
 }
