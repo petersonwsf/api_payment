@@ -1,6 +1,6 @@
-import { PaymentStatus } from "@prisma/client";
+import { PaymentStatus } from '@prisma/client';
 
 export interface UpdatePaymentDTO {
-    status?: PaymentStatus;
-    amountCaptured?: number;
+  status?: PaymentStatus;
+  amountCaptured?: number;
 }

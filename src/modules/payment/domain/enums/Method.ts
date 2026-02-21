@@ -1,4 +1,4 @@
 export enum Method {
-    BOLETO = 'boleto',
-    CARTAO = 'card'
+  BOLETO = 'boleto',
+  CARTAO = 'card',
 }

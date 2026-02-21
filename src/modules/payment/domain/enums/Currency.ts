@@ -1,3 +1,3 @@
 export enum Currency {
-    BRL = 'brl'
+  BRL = 'brl',
 }
