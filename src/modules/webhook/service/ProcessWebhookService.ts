@@ -5,6 +5,7 @@ import { WebhookRepository } from "../repository/WebhookRepository";
 import { PaymentAuthorizedService } from "./PaymentAuthorizedService";
 import { PaymentSucceededService } from "./PaymentSucceededService";
 import { PaymentRefundedService } from "./PaymentRefundedService";
+import { PaymentCanceledService } from "./PaymentCanceledService";
 
 @Injectable()
 export class ProcessWebhookService {
@@ -13,7 +14,8 @@ export class ProcessWebhookService {
         private readonly repository: WebhookRepository,
         private readonly paymentAuthorizedService: PaymentAuthorizedService,
         private readonly paymentSucceededService: PaymentSucceededService,
-        private readonly paymentRefundedService: PaymentRefundedService
+        private readonly paymentRefundedService: PaymentRefundedService,
+        private readonly paymentCanceledService: PaymentCanceledService
     ) {}
 
     async execute(data: any) {
@@ -55,7 +57,11 @@ export class ProcessWebhookService {
                 case 'charge.refunded':
                     this.paymentRefundedService.execute(webhook)
                     break;
-                
+                case 'payment_intent.canceled':
+                    this.paymentCanceledService.execute(webhook)
+                    break;
+                default:
+                    await this.repository.processWebhook(webhook.id, 'IGNORED')
             }
         } catch (error) {
             await this.repository.processWebhook(webhook.id, 'FAILED', error.message)
