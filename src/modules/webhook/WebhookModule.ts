@@ -6,10 +6,21 @@ import { PaymentModule } from "../payment/PaymentModule";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 import { RABBITMQ_SERVICE } from "../../config/rabbitmq/rabbitmq";
 import { env } from "process";
+import { PaymentSucceededService } from "./service/PaymentSucceededService";
+import { PaymentCanceledService } from "./service/PaymentCanceledService";
+import { PaymentRefundedService } from "./service/PaymentRefundedService";
+import { PaymentAuthorizedService } from "./service/PaymentAuthorizedService";
 
 @Module({
     controllers: [WebhookController],
-    providers: [ProcessWebhookService, WebhookRepository],
+    providers: [
+        ProcessWebhookService,
+        WebhookRepository,
+        PaymentSucceededService,
+        PaymentCanceledService,
+        PaymentRefundedService,
+        PaymentAuthorizedService
+    ],
     imports: [
         PaymentModule,
         ClientsModule.register([
