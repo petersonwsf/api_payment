@@ -20,6 +20,12 @@ export class WebhookRepository implements IWebhookRepository {
     return eventExisting;
   }
 
+  async findByStatus(status: WebhookProcessStatus) {
+    return await prisma.stripeWebhookEvent.findMany({
+      where: { status: status },
+    });
+  }
+
   async processWebhook(
     id: number,
     status: WebhookProcessStatus,
