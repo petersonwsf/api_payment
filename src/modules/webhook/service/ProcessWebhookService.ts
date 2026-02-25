@@ -64,6 +64,9 @@ export class ProcessWebhookService {
         case 'payment_intent.canceled':
           this.paymentCanceledService.execute(webhook);
           break;
+        case 'payment_intent.payment_failed':
+          this.paymentCanceledService.execute(webhook);
+          break;
         default:
           await this.repository.processWebhook(webhook.id, 'IGNORED');
       }
