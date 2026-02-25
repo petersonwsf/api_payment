@@ -17,8 +17,8 @@ export class ProcessWebhookService {
     private readonly paymentCanceledService: PaymentCanceledService,
   ) {}
 
-  async execute(data: any) {
-    const dataEvent = data as Stripe.Event;
+  async execute(data: Stripe.Event) {
+    const dataEvent = data;
 
     const dataObject = dataEvent.data.object as any;
 
