@@ -10,6 +10,7 @@ import { PaymentSucceededService } from './service/PaymentSucceededService';
 import { PaymentCanceledService } from './service/PaymentCanceledService';
 import { PaymentRefundedService } from './service/PaymentRefundedService';
 import { PaymentAuthorizedService } from './service/PaymentAuthorizedService';
+import { ProccessWebhookSchedule } from './service/ProccessWebhookSchedule';
 
 @Module({
   controllers: [WebhookController],
@@ -20,6 +21,7 @@ import { PaymentAuthorizedService } from './service/PaymentAuthorizedService';
     PaymentCanceledService,
     PaymentRefundedService,
     PaymentSucceededService,
+    ProccessWebhookSchedule,
   ],
   imports: [
     PaymentModule,
