@@ -44,7 +44,7 @@ export class PaymentController {
         throw new BadRequestException({ message: 'Dados inválidos' });
       if (error instanceof AmountZero)
         throw new BadRequestException({ message: error.message });
-      throw Error('Unhandled error!');
+      throw Error(`Unhandled error! ${error.message}`);
     }
   }
 

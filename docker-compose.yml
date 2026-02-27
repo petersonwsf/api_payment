@@ -11,6 +11,15 @@ services:
       - POSTGRESQL_DATABASE=paymentService
     volumes:
       - postgres_data_payment:/bitnami/postgresql
+  postgressqlteste:
+    image: bitnami/postgresql:latest
+    container_name: bd_teste
+    ports: 
+      - 7000:5432
+    environment:
+      - POSTGRESQL_USERNAME=user
+      - POSTGRESQL_PASSWORD=user
+      - POSTGRESQL_DATABASE=paymentServiceTeste
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
