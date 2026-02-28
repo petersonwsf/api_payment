@@ -89,4 +89,4 @@ describe('PaymentController', () => {
       })
       .expect(500);
   });
-})
+});
