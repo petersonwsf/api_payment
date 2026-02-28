@@ -1,11 +1,11 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { CreatePaymentService } from "./CreatePaymentService";
-import { PaymentRepository } from "../repository/PaymentRepository";
-import { STRIPE_CLIENT } from "src/config/stripe/stripe";
-import { stripeMockTest } from "../../../test-utils/stripe-mock";
-import { CaptureMethod, PaymentStatus } from "@prisma/client";
-import { Method } from "../domain/enums/Method";
-import { Currency } from "../domain/enums/Currency";
+import { Test, TestingModule } from '@nestjs/testing';
+import { CreatePaymentService } from './CreatePaymentService';
+import { PaymentRepository } from '../repository/PaymentRepository';
+import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { stripeMockTest } from '../../../test-utils/stripe-mock';
+import { CaptureMethod, PaymentStatus } from '@prisma/client';
+import { Method } from '../domain/enums/Method';
+import { Currency } from '../domain/enums/Currency';
 
 describe('CreatePaymentService', () => {
   let service: CreatePaymentService;
@@ -49,7 +49,6 @@ describe('CreatePaymentService', () => {
   });
 
   it('Deve processar com sucesso', async () => {
-
     const saveSpy = jest.spyOn(repository, 'create');
 
     const paymentData = {
