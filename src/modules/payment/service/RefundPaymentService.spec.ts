@@ -13,7 +13,7 @@ describe('Teste de pagamento reembolsado', () => {
   let service: RefundPaymentService;
   let repository: PaymentRepository;
 
-  const data = new Date();
+  const date = new Date();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,57 +26,7 @@ describe('Teste de pagamento reembolsado', () => {
         {
           provide: PaymentRepository,
           useValue: {
-            findPaymentById: jest
-              .fn()
-              .mockResolvedValueOnce({
-                userId: 1,
-                stripePaymentIntentId: 'pi_mock_3534054309850',
-                amountAuthorized: 50000,
-                amountCaptured: 0,
-                currency: 'brl',
-                status: PaymentStatus.AUTHORIZED,
-                captureMethod: CaptureMethod.MANUAL,
-                createdAt: data,
-                updatedAt: data,
-                id: 1,
-              })
-              .mockResolvedValueOnce({
-                userId: 50,
-                stripePaymentIntentId: 'pi_mock_3534054309850',
-                amountAuthorized: 50000,
-                amountCaptured: 0,
-                currency: 'brl',
-                status: PaymentStatus.AUTHORIZED,
-                captureMethod: CaptureMethod.MANUAL,
-                createdAt: data,
-                updatedAt: data,
-                id: 1,
-              })
-              .mockResolvedValueOnce(null)
-              .mockResolvedValueOnce({
-                userId: 1,
-                stripePaymentIntentId: 'pi_mock_3534054309850',
-                amountAuthorized: 50000,
-                amountCaptured: 0,
-                currency: 'brl',
-                status: PaymentStatus.AUTHORIZED,
-                captureMethod: CaptureMethod.MANUAL,
-                createdAt: data,
-                updatedAt: data,
-                id: 1,
-              })
-              .mockResolvedValue({
-                userId: 1,
-                stripePaymentIntentId: 'pi_mock_3534054309850',
-                amountAuthorized: 50000,
-                amountCaptured: 0,
-                currency: 'brl',
-                status: PaymentStatus.CAPTURED,
-                captureMethod: CaptureMethod.MANUAL,
-                createdAt: data,
-                updatedAt: data,
-                id: 1,
-              }),
+            findPaymentById: jest.fn(),
             update: jest.fn().mockResolvedValue(undefined),
           },
         },
@@ -87,7 +37,31 @@ describe('Teste de pagamento reembolsado', () => {
     repository = module.get<PaymentRepository>(PaymentRepository);
   });
 
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('Caso de sucesso', async () => {
+    jest.spyOn(repository, 'findPaymentById').mockResolvedValueOnce({
+      userId: 1,
+      reservationId: 1,
+      stripePaymentIntentId: 'pi_mock_3534054309850',
+      amountAuthorized: 50000,
+      amountCaptured: 0,
+      currency: 'brl',
+      status: PaymentStatus.AUTHORIZED,
+      captureMethod: CaptureMethod.MANUAL,
+      createdAt: date,
+      updatedAt: date,
+      id: 1,
+    });
+
+    stripeMockTest.paymentIntents.retrieve.mockResolvedValueOnce({
+      id: 'pi_mock_1',
+      client_secret: 'secret',
+      status: 'requires_payment_method',
+    });
+
     const data = {
       id: 1,
       user: {
@@ -106,6 +80,8 @@ describe('Teste de pagamento reembolsado', () => {
   });
 
   it('Caso de erro: Id inválido', async () => {
+    const findPaymentSpy = jest.spyOn(repository, 'findPaymentById');
+
     const data = {
       id: 'Invalid id',
       user: {
@@ -116,9 +92,27 @@ describe('Teste de pagamento reembolsado', () => {
     };
 
     await expect(service.execute(data)).rejects.toThrow(InvalidId);
+
+    expect(findPaymentSpy).not.toHaveBeenCalled();
   });
 
   it('Caso de erro: Usuário com id diferente do id associado ao pagamento', async () => {
+    jest.spyOn(repository, 'findPaymentById').mockResolvedValueOnce({
+      userId: 50,
+      reservationId: 1,
+      stripePaymentIntentId: 'pi_mock_3534054309850',
+      amountAuthorized: 50000,
+      amountCaptured: 0,
+      currency: 'brl',
+      status: PaymentStatus.AUTHORIZED,
+      captureMethod: CaptureMethod.MANUAL,
+      createdAt: date,
+      updatedAt: date,
+      id: 1,
+    });
+
+    const updateSpy = jest.spyOn(repository, 'update');
+
     const data = {
       id: 1,
       user: {
@@ -129,9 +123,15 @@ describe('Teste de pagamento reembolsado', () => {
     };
 
     await expect(service.execute(data)).rejects.toThrow(PaymentNotBelongUser);
+
+    expect(updateSpy).not.toHaveBeenCalled();
   });
 
   it('Caso de erro: Pagamento não encontrado', async () => {
+    jest.spyOn(repository, 'findPaymentById').mockResolvedValueOnce(null);
+
+    const updateSpy = jest.spyOn(repository, 'update');
+
     const data = {
       id: 57,
       user: {
@@ -142,9 +142,33 @@ describe('Teste de pagamento reembolsado', () => {
     };
 
     await expect(service.execute(data)).rejects.toThrow(PaymentNotFound);
+
+    expect(updateSpy).not.toHaveBeenCalled();
   });
 
   it('Caso de erro: Pagamento já processado', async () => {
+    jest.spyOn(repository, 'findPaymentById').mockResolvedValueOnce({
+      userId: 1,
+      reservationId: 1,
+      stripePaymentIntentId: 'pi_mock_3534054309850',
+      amountAuthorized: 50000,
+      amountCaptured: 0,
+      currency: 'brl',
+      status: PaymentStatus.AUTHORIZED,
+      captureMethod: CaptureMethod.MANUAL,
+      createdAt: date,
+      updatedAt: date,
+      id: 1,
+    });
+
+    stripeMockTest.paymentIntents.retrieve.mockResolvedValueOnce({
+      id: 'pi_mock_1',
+      client_secret: 'secret',
+      status: 'succeeded',
+    });
+
+    const updateSpy = jest.spyOn(repository, 'update');
+
     const data = {
       id: 1,
       user: {
@@ -154,10 +178,34 @@ describe('Teste de pagamento reembolsado', () => {
       },
     };
 
-    await expect(service.execute(data)).rejects.toThrow(PaymentCannotBeRefunded);
+    await expect(service.execute(data)).rejects.toThrow(
+      PaymentCannotBeRefunded,
+    );
+
+    expect(updateSpy).not.toHaveBeenCalled();
   });
 
   it('Caso de sucesso: Reembolso feito por admin', async () => {
+    jest.spyOn(repository, 'findPaymentById').mockResolvedValueOnce({
+      userId: 1,
+      reservationId: 1,
+      stripePaymentIntentId: 'pi_mock_3534054309850',
+      amountAuthorized: 50000,
+      amountCaptured: 0,
+      currency: 'brl',
+      status: PaymentStatus.CREATED,
+      captureMethod: CaptureMethod.MANUAL,
+      createdAt: date,
+      updatedAt: date,
+      id: 1,
+    });
+
+    stripeMockTest.paymentIntents.retrieve.mockResolvedValueOnce({
+      id: 'pi_mock_1',
+      client_secret: 'secret',
+      status: 'requires_payment_method',
+    });
+
     const data = {
       id: 1,
       user: {
