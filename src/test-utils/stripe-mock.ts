@@ -6,5 +6,6 @@ export const stripeMockTest = {
     }),
     retrieve: jest.fn(),
     cancel: jest.fn().mockResolvedValue({}),
+    capture: jest.fn(),
   },
 };
