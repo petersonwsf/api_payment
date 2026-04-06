@@ -15,6 +15,8 @@ import { PaymentNotAuthorized } from '../domain/errors/PaymentNotAuthorized';
 import { ValueAbovePermitted } from '../domain/errors/ValueAbovePermitted';
 import { StripeError } from '../domain/errors/StripeError';
 import { BadRequestException } from '@nestjs/common';
+import { CardPayment } from '../strategies/CardPayment';
+import { BoletoPayment } from '../strategies/BoletoPayment';
 
 describe('Teste de captura de pagamento', () => {
   let service: AmountCaptureService;
@@ -26,6 +28,8 @@ describe('Teste de captura de pagamento', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AmountCaptureService,
+        CardPayment,
+        BoletoPayment,
         {
           provide: STRIPE_CLIENT,
           useValue: stripeMockTest,
