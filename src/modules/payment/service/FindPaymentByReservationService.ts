@@ -4,7 +4,7 @@ import { PaymentRepository } from '../repository/PaymentRepository';
 import { InvalidId } from '../domain/errors/InvalidId';
 import { PaymentListResponse } from '../dtos/PaymentListResponse';
 import { Payment } from '@prisma/client';
-import { isNumber } from 'src/utils/isNumber';
+import { isNumber } from 'src/common/utils/isNumber';
 
 @Injectable()
 export class FindPaymentByReservationService {

@@ -2,14 +2,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import * as z from 'zod';
 import { AmountZero } from '../domain/errors/AmountZero.error';
 import Stripe from 'stripe';
-import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 import { Prisma } from '@prisma/client';
 import { PaymentStatus, CaptureMethod } from '@prisma/client';
 import { PaymentRepository } from '../repository/PaymentRepository';
 import { Method } from '../domain/enums/Method';
-import { PaymentMethodService } from '../dtos/PaymentMethodService';
-import { CardPayment } from './CardPayment';
-import { BoletoPayment } from './BoletoPayment';
+import { PaymentMethodService } from '../strategies/interfaces/IPaymentStrategy';
+import { CardPayment } from '../strategies/CardPayment';
+import { BoletoPayment } from '../strategies/BoletoPayment';
 import { CreatePaymentIntent } from '../dtos/CreatePaymentIntent';
 import { Logger } from '@nestjs/common';
 

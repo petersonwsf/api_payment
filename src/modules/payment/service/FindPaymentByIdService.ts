@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PaymentRepository } from '../repository/PaymentRepository';
-import { isNumber } from 'src/utils/isNumber';
+import { isNumber } from 'src/common/utils/isNumber';
 import { InvalidId } from '../domain/errors/InvalidId';
 import { PaymentDetails } from '../dtos/PaymentDetails';
 import { PaymentNotFound } from '../domain/errors/PaymentNotFound';
-import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 import Stripe from 'stripe';
 import { Logger } from '@nestjs/common';
 

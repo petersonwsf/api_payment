@@ -4,7 +4,7 @@ import { ProcessWebhookService } from './service/ProcessWebhookService';
 import { WebhookRepository } from './repository/WebhookRepository';
 import { PaymentModule } from '../payment/PaymentModule';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { RABBITMQ_SERVICE } from '../../common/rabbitmq/rabbitmq';
+import { RABBITMQ_SERVICE } from '../../common/rabbitmq/rabbitmq.constants';
 import { env } from 'process';
 import { PaymentSucceededService } from './service/PaymentSucceededService';
 import { PaymentCanceledService } from './service/PaymentCanceledService';

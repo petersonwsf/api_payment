@@ -1,14 +1,14 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 import Stripe from 'stripe';
 import { PaymentRepository } from '../repository/PaymentRepository';
 import { PaymentNotFound } from '../domain/errors/PaymentNotFound';
 import { PaymentCaptureDTO } from '../dtos/PaymentCaptureDTO';
 import * as zod from 'zod';
 import { Method } from '../domain/enums/Method';
-import { PaymentMethodService } from '../dtos/PaymentMethodService';
-import { CardPayment } from './CardPayment';
-import { BoletoPayment } from './BoletoPayment';
+import { IPayementStrategy } from '../strategies/interfaces/IPaymentStrategy';
+import { CardPayment } from '../strategies/CardPayment';
+import { BoletoPayment } from '../strategies/BoletoPayment';
 import { CaptureMethod, PaymentStatus, Prisma } from '@prisma/client';
 import { PaymentAutomaticCapture } from '../domain/errors/PaymentAutomaticCapture';
 import { PaymentCannotBeCaptured } from '../domain/errors/PaymentCannotBeCaptured';
@@ -19,27 +19,36 @@ import { StripeError } from '../domain/errors/StripeError';
 import { PaymentNotBelongUser } from '../domain/errors/PaymentNotBelongUser';
 import { Logger } from '@nestjs/common';
 
+const validationSchema = zod.object({
+  id: zod.coerce.number().int(),
+  user: zod.object({
+    id: zod.coerce.number().int(),
+    username: zod.string(),
+    role: zod.string(),
+  }),
+  userId: zod.coerce.number().int(),
+  amount: zod.coerce.number(),
+  method: zod.nativeEnum(Method).optional(),
+});
+
+const INVALID_CAPTURE_STATUS: PaymentStatus[] = [
+  PaymentStatus.CAPTURED,
+  PaymentStatus.REFUNDED,
+  PaymentStatus.FAILED,
+  PaymentStatus.CANCELED,
+];
+
 @Injectable()
 export class AmountCaptureService {
   constructor(
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
     private readonly repository: PaymentRepository,
+    private readonly card: CardPayment,
+    private readonly boleto: BoletoPayment,
   ) {}
   private readonly logger = new Logger(AmountCaptureService.name);
 
   async execute(data: PaymentCaptureDTO) {
-    const validationSchema = zod.object({
-      id: zod.coerce.number().int(),
-      user: zod.object({
-        id: zod.coerce.number().int(),
-        username: zod.string(),
-        role: zod.string(),
-      }),
-      userId: zod.coerce.number().int(),
-      amount: zod.coerce.number(),
-      method: zod.nativeEnum(Method).optional(),
-    });
-
     const dataValid = validationSchema.parse(data);
 
     const valueInCents = Math.round(dataValid.amount * 100);
@@ -55,16 +64,7 @@ export class AmountCaptureService {
     if (payment.captureMethod != CaptureMethod.MANUAL)
       throw new PaymentAutomaticCapture();
 
-    if (
-      ([] as PaymentStatus[])
-        .concat([
-          PaymentStatus.CAPTURED,
-          PaymentStatus.REFUNDED,
-          PaymentStatus.FAILED,
-          PaymentStatus.CANCELED,
-        ])
-        .includes(payment.status)
-    )
+    if (INVALID_CAPTURE_STATUS.includes(payment.status))
       throw new PaymentCannotBeCaptured();
 
     if (payment.status != PaymentStatus.AUTHORIZED)
@@ -101,10 +101,8 @@ export class AmountCaptureService {
           'A payment method is required in case of incomplete payment!',
         );
 
-      let paymentMethod: PaymentMethodService;
-      if (dataValid.method == Method.CARTAO)
-        paymentMethod = new CardPayment(this.stripe);
-      else paymentMethod = new BoletoPayment(this.stripe);
+      const paymentMethod: IPayementStrategy =
+        dataValid.method === Method.CARTAO ? this.card : this.boleto;
 
       const captureMethod =
         paymentMethod instanceof CardPayment

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreatePaymentService } from './CreatePaymentService';
 import { PaymentRepository } from '../repository/PaymentRepository';
-import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 import { stripeMockTest } from '../../../test-utils/stripe-mock';
 import { CaptureMethod, PaymentStatus } from '@prisma/client';
 import { Method } from '../domain/enums/Method';
