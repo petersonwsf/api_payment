@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
 import Stripe from 'stripe';
 import { PaymentRepository } from '../repository/PaymentRepository';
 import { PaymentNotFound } from '../domain/errors/PaymentNotFound';
@@ -17,6 +17,7 @@ import { AmountZero } from '../domain/errors/AmountZero.error';
 import { ValueAbovePermitted } from '../domain/errors/ValueAbovePermitted';
 import { StripeError } from '../domain/errors/StripeError';
 import { PaymentNotBelongUser } from '../domain/errors/PaymentNotBelongUser';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class AmountCaptureService {
@@ -24,6 +25,7 @@ export class AmountCaptureService {
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
     private readonly repository: PaymentRepository,
   ) {}
+  private readonly logger = new Logger(AmountCaptureService.name);
 
   async execute(data: PaymentCaptureDTO) {
     const validationSchema = zod.object({
@@ -77,6 +79,9 @@ export class AmountCaptureService {
       await this.stripe.paymentIntents.capture(payment.stripePaymentIntentId, {
         amount_to_capture: valueInCents,
       });
+    this.logger.log(
+      `Payment Intent with ID ${payment.stripePaymentIntentId} captured successfully for amount ${valueInCents} cents`,
+    );
 
     if (captured.status != 'succeeded')
       throw new StripeError('Payment not succeeded, wait a minute!');
@@ -93,7 +98,7 @@ export class AmountCaptureService {
     if (remainder > 0) {
       if (!dataValid.method)
         throw new BadRequestException(
-          'É obrigatório método de pagamento em caso de pagamento incompleto!',
+          'A payment method is required in case of incomplete payment!',
         );
 
       let paymentMethod: PaymentMethodService;
@@ -112,6 +117,10 @@ export class AmountCaptureService {
           currency: payment.currency,
           reservationId: payment.reservationId,
         });
+
+      this.logger.log(
+        `New payment intent with ID ${stripeNewPayment.id} created successfully for amount ${remainder} cents`,
+      );
 
       const newPayment: Prisma.PaymentCreateInput = {
         amountAuthorized: remainder,

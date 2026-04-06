@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import * as z from 'zod';
 import { AmountZero } from '../domain/errors/AmountZero.error';
 import Stripe from 'stripe';
-import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
 import { Prisma } from '@prisma/client';
 import { PaymentStatus, CaptureMethod } from '@prisma/client';
 import { PaymentRepository } from '../repository/PaymentRepository';
@@ -11,6 +11,7 @@ import { PaymentMethodService } from '../dtos/PaymentMethodService';
 import { CardPayment } from './CardPayment';
 import { BoletoPayment } from './BoletoPayment';
 import { CreatePaymentIntent } from '../dtos/CreatePaymentIntent';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class CreatePaymentService {
@@ -18,6 +19,8 @@ export class CreatePaymentService {
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
     private readonly repository: PaymentRepository,
   ) {}
+
+  private readonly logger = new Logger(CreatePaymentService.name);
 
   async execute(data: CreatePaymentIntent) {
     let paymentMethod: PaymentMethodService;
@@ -50,6 +53,9 @@ export class CreatePaymentService {
 
     const paymentIntent: Stripe.Response<Stripe.PaymentIntent> =
       await paymentMethod.createPayment(dataValid);
+    this.logger.log(
+      `Payment Intent created successfully with ID ${paymentIntent.id} for reservation ID ${dataValid.reservationId} and amount ${dataValid.amount} cents`,
+    );
 
     const paymentData: Prisma.PaymentCreateInput = {
       reservationId: dataValid.reservationId,
@@ -62,6 +68,9 @@ export class CreatePaymentService {
     };
 
     const payment = await this.repository.create(paymentData);
+    this.logger.log(
+      `Payment created successfully with ID ${payment.id} for reservation ID ${dataValid.reservationId} in DB`,
+    );
 
     return {
       clientSecret: paymentIntent.client_secret,

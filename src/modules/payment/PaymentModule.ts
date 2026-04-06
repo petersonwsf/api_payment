@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PaymentController } from './controller/PaymentController';
 import Stripe from 'stripe';
-import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
 import { CreatePaymentService } from './service/CreatePaymentService';
 import { env } from 'process';
 import { PaymentRepository } from './repository/PaymentRepository';

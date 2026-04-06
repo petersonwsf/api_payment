@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RefundPaymentService } from './RefundPaymentService';
 import { PaymentRepository } from '../repository/PaymentRepository';
-import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
 import { stripeMockTest } from 'src/test-utils/stripe-mock';
 import { CaptureMethod, PaymentStatus } from '@prisma/client';
 import { InvalidId } from '../domain/errors/InvalidId';
@@ -33,6 +33,7 @@ describe('Teste de pagamento reembolsado', () => {
       ],
     }).compile();
 
+    module.useLogger(false);
     service = module.get<RefundPaymentService>(RefundPaymentService);
     repository = module.get<PaymentRepository>(PaymentRepository);
   });

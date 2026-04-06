@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import type { RawBodyRequest } from '@nestjs/common';
-import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
 import Stripe from 'stripe';
 import { env } from 'process';
 import { ProcessWebhookService } from '../service/ProcessWebhookService';
