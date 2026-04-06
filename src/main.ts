@@ -12,7 +12,7 @@ async function bootstrap() {
     new FastifyAdapter(),
     { logger: ['error', 'warn', 'log'] },
   );
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3333, '0.0.0.0');
 }
 bootstrap().catch((err) => {
   console.log(err);
