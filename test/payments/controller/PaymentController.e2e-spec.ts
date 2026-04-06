@@ -4,7 +4,7 @@ import { AppModule } from '../../../src/app.module';
 import request from 'supertest';
 import { Method } from '../../../src/modules/payment/domain/enums/Method';
 import { AuthGuard } from '@nestjs/passport';
-import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 import { stripeMock } from '../../__mocks__/mock_stripe';
 import { prisma } from 'src/lib/prisma';
 

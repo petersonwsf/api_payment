@@ -18,15 +18,13 @@ export class ProccessWebhookSchedule {
       WebhookProcessStatus.RECEIVED,
     );
 
-    console.log('Aqui funcionando');
-
     if (webhookEvents.length === 0) return;
 
     for (const event of webhookEvents) {
       try {
         const stripeEvent = event.payload as unknown as Stripe.Event;
         await this.processWebhookService.execute(stripeEvent);
-      } catch (err) {
+      } catch (err: any) {
         console.log(`Erro ao processar webhook: ${err.message}`);
       }
     }

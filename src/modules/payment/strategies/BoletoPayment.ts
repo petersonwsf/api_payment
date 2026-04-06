@@ -1,12 +1,11 @@
 import Stripe from 'stripe';
-import { PaymentMethodService } from '../dtos/PaymentMethodService';
+import { IPayementStrategy } from './interfaces/IPaymentStrategy';
+import { Inject, Injectable } from '@nestjs/common';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 
-export class BoletoPayment implements PaymentMethodService {
-  stripe: Stripe;
-
-  constructor(stripe: Stripe) {
-    this.stripe = stripe;
-  }
+@Injectable()
+export class BoletoPayment implements IPayementStrategy {
+  constructor(@Inject(STRIPE_CLIENT) private readonly stripe: Stripe) {}
 
   async createPayment(
     data: any,

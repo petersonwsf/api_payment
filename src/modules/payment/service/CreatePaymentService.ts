@@ -2,38 +2,38 @@ import { Inject, Injectable } from '@nestjs/common';
 import * as z from 'zod';
 import { AmountZero } from '../domain/errors/AmountZero.error';
 import Stripe from 'stripe';
-import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 import { Prisma } from '@prisma/client';
 import { PaymentStatus, CaptureMethod } from '@prisma/client';
 import { PaymentRepository } from '../repository/PaymentRepository';
 import { Method } from '../domain/enums/Method';
-import { PaymentMethodService } from '../dtos/PaymentMethodService';
-import { CardPayment } from './CardPayment';
-import { BoletoPayment } from './BoletoPayment';
+import { IPayementStrategy } from '../strategies/interfaces/IPaymentStrategy';
+import { CardPayment } from '../strategies/CardPayment';
+import { BoletoPayment } from '../strategies/BoletoPayment';
 import { CreatePaymentIntent } from '../dtos/CreatePaymentIntent';
 import { Logger } from '@nestjs/common';
+
+const schemaValidation = z.object({
+  reservationId: z.number(),
+  amount: z.number(),
+  userId: z.number().int(),
+  method: z.enum(Method),
+  currency: z.string().optional(),
+  customerEmail: z.string().optional(),
+});
 
 @Injectable()
 export class CreatePaymentService {
   constructor(
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
     private readonly repository: PaymentRepository,
+    private readonly card: CardPayment,
+    private readonly boleto: BoletoPayment,
   ) {}
 
   private readonly logger = new Logger(CreatePaymentService.name);
 
   async execute(data: CreatePaymentIntent) {
-    let paymentMethod: PaymentMethodService;
-
-    const schemaValidation = z.object({
-      reservationId: z.number(),
-      amount: z.number(),
-      userId: z.number().int(),
-      method: z.enum(Method),
-      currency: z.string().optional(),
-      customerEmail: z.string().optional(),
-    });
-
     const dataValid = schemaValidation.parse(data);
 
     if (dataValid.amount <= 0) throw new AmountZero();
@@ -42,9 +42,8 @@ export class CreatePaymentService {
 
     dataValid.amount = valueInCents;
 
-    if (dataValid.method == Method.BOLETO)
-      paymentMethod = new BoletoPayment(this.stripe);
-    else paymentMethod = new CardPayment(this.stripe);
+    const paymentMethod: IPayementStrategy =
+      dataValid.method === Method.CARTAO ? this.card : this.boleto;
 
     const captureMethod =
       paymentMethod instanceof CardPayment

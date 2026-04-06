@@ -1,11 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreatePaymentService } from './CreatePaymentService';
 import { PaymentRepository } from '../repository/PaymentRepository';
-import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 import { stripeMockTest } from '../../../test-utils/stripe-mock';
 import { CaptureMethod, PaymentStatus } from '@prisma/client';
 import { Method } from '../domain/enums/Method';
 import { Currency } from '../domain/enums/Currency';
+import { CardPayment } from '../strategies/CardPayment';
+import { BoletoPayment } from '../strategies/BoletoPayment';
 
 describe('CreatePaymentService', () => {
   let service: CreatePaymentService;
@@ -17,6 +19,8 @@ describe('CreatePaymentService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreatePaymentService,
+        CardPayment,
+        BoletoPayment,
         {
           provide: STRIPE_CLIENT,
           useValue: stripeMockTest,

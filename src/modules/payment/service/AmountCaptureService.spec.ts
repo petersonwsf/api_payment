@@ -1,20 +1,22 @@
-import { Test, TestingModule } from "@nestjs/testing"
-import { STRIPE_CLIENT } from "src/common/stripe/stripe"
-import { stripeMockTest } from "src/test-utils/stripe-mock"
-import { AmountCaptureService } from "./AmountCaptureService";
-import { PaymentRepository } from "../repository/PaymentRepository";
-import { CaptureMethod, PaymentStatus } from "@prisma/client";
-import { Method } from "../domain/enums/Method";
-import { ZodError } from "zod";
-import { AmountZero } from "../domain/errors/AmountZero.error";
-import { PaymentNotFound } from "../domain/errors/PaymentNotFound";
-import { PaymentNotBelongUser } from "../domain/errors/PaymentNotBelongUser";
-import { PaymentAutomaticCapture } from "../domain/errors/PaymentAutomaticCapture";
-import { PaymentCannotBeCaptured } from "../domain/errors/PaymentCannotBeCaptured";
-import { PaymentNotAuthorized } from "../domain/errors/PaymentNotAuthorized";
-import { ValueAbovePermitted } from "../domain/errors/ValueAbovePermitted";
-import { StripeError } from "../domain/errors/StripeError";
-import { BadRequestException } from "@nestjs/common";
+import { Test, TestingModule } from '@nestjs/testing';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
+import { stripeMockTest } from 'src/test-utils/stripe-mock';
+import { AmountCaptureService } from './AmountCaptureService';
+import { PaymentRepository } from '../repository/PaymentRepository';
+import { CaptureMethod, PaymentStatus } from '@prisma/client';
+import { Method } from '../domain/enums/Method';
+import { ZodError } from 'zod';
+import { AmountZero } from '../domain/errors/AmountZero.error';
+import { PaymentNotFound } from '../domain/errors/PaymentNotFound';
+import { PaymentNotBelongUser } from '../domain/errors/PaymentNotBelongUser';
+import { PaymentAutomaticCapture } from '../domain/errors/PaymentAutomaticCapture';
+import { PaymentCannotBeCaptured } from '../domain/errors/PaymentCannotBeCaptured';
+import { PaymentNotAuthorized } from '../domain/errors/PaymentNotAuthorized';
+import { ValueAbovePermitted } from '../domain/errors/ValueAbovePermitted';
+import { StripeError } from '../domain/errors/StripeError';
+import { BadRequestException } from '@nestjs/common';
+import { CardPayment } from '../strategies/CardPayment';
+import { BoletoPayment } from '../strategies/BoletoPayment';
 
 describe('Teste de captura de pagamento', () => {
   let service: AmountCaptureService;
@@ -26,6 +28,8 @@ describe('Teste de captura de pagamento', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AmountCaptureService,
+        CardPayment,
+        BoletoPayment,
         {
           provide: STRIPE_CLIENT,
           useValue: stripeMockTest,
@@ -151,7 +155,6 @@ describe('Teste de captura de pagamento', () => {
   });
 
   it('Caso de sucesso - Pagamento parcial, outro deve ser criado com o novo método de pagamento', async () => {
-
     stripeMockTest.paymentIntents.capture.mockResolvedValueOnce({
       status: 'succeeded',
       amount_received: 40000,
