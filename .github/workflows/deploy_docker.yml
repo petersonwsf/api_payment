@@ -2,7 +2,7 @@ name: Deploy Docker HUB
 
 on:
   push:
-    branch: ["main"]
+    branches: ["main"]
 
 jobs:
   deploy_docker_hub:
