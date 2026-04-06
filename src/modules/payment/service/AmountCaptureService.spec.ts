@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing"
-import { STRIPE_CLIENT } from "src/config/stripe/stripe"
+import { STRIPE_CLIENT } from "src/common/stripe/stripe"
 import { stripeMockTest } from "src/test-utils/stripe-mock"
 import { AmountCaptureService } from "./AmountCaptureService";
 import { PaymentRepository } from "../repository/PaymentRepository";
@@ -41,6 +41,7 @@ describe('Teste de captura de pagamento', () => {
       ],
     }).compile();
 
+    module.useLogger(false);
     service = module.get<AmountCaptureService>(AmountCaptureService);
     repository = module.get<PaymentRepository>(PaymentRepository);
   });

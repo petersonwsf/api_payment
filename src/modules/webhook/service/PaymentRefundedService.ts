@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { StripeWebhookEvent } from '@prisma/client';
-import { RABBITMQ_SERVICE } from 'src/config/rabbitmq/rabbitmq';
+import { RABBITMQ_SERVICE } from 'src/common/rabbitmq/rabbitmq';
 
 @Injectable()
 export class PaymentRefundedService {

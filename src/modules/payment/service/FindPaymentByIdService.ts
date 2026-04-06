@@ -4,8 +4,9 @@ import { isNumber } from 'src/utils/isNumber';
 import { InvalidId } from '../domain/errors/InvalidId';
 import { PaymentDetails } from '../dtos/PaymentDetails';
 import { PaymentNotFound } from '../domain/errors/PaymentNotFound';
-import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
 import Stripe from 'stripe';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class FindPaymentByIdService {
@@ -14,7 +15,11 @@ export class FindPaymentByIdService {
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
   ) {}
 
+  private readonly logger = new Logger(FindPaymentByIdService.name);
+
   async execute(id: string): Promise<PaymentDetails> {
+    this.logger.log(`Finding payment with ID ${id}`);
+
     if (!isNumber(id)) throw new InvalidId();
 
     const payment = await this.repository.findPaymentById(Number(id));
@@ -23,6 +28,9 @@ export class FindPaymentByIdService {
 
     const stripePaymentIntent = await this.stripe.paymentIntents.retrieve(
       payment.stripePaymentIntentId,
+    );
+    this.logger.log(
+      `Stripe Payment Intent with ID ${payment.stripePaymentIntentId} retrieved successfully`,
     );
 
     const paymentDetails: PaymentDetails = {

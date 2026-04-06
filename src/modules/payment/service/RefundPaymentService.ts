@@ -3,12 +3,13 @@ import { PaymentRepository } from '../repository/PaymentRepository';
 import { isNumber } from 'src/utils/isNumber';
 import { InvalidId } from '../domain/errors/InvalidId';
 import { PaymentNotFound } from '../domain/errors/PaymentNotFound';
-import { STRIPE_CLIENT } from 'src/config/stripe/stripe';
+import { STRIPE_CLIENT } from 'src/common/stripe/stripe';
 import Stripe from 'stripe';
 import { paymentStatusForRefund } from '../domain/enums/PaymentStatusForRefund';
 import { PaymentCannotBeRefunded } from '../domain/errors/PaymentCannotBeRefunded';
 import { UserDTO } from '../dtos/UserDTO';
 import { PaymentNotBelongUser } from '../domain/errors/PaymentNotBelongUser';
+import { Logger } from '@nestjs/common';
 
 interface RefundData {
   id: number | string;
@@ -21,6 +22,7 @@ export class RefundPaymentService {
     private readonly repository: PaymentRepository,
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
   ) {}
+  private readonly logger = new Logger(RefundPaymentService.name);
 
   async execute(data: RefundData): Promise<{ id: number; message: string }> {
     const { id, user } = data;
@@ -40,11 +42,17 @@ export class RefundPaymentService {
     const stripePayment = await this.stripe.paymentIntents.retrieve(
       payment.stripePaymentIntentId,
     );
+    this.logger.log(
+      `Stripe payment intent retrieved successfully: ${JSON.stringify(stripePayment)}`,
+    );
 
     if (!paymentStatusForRefund.includes(stripePayment.status))
       throw new PaymentCannotBeRefunded();
 
     await this.stripe.paymentIntents.cancel(payment.stripePaymentIntentId);
+    this.logger.log(
+      `Stripe payment intent with ID ${payment.stripePaymentIntentId} cancelled successfully`,
+    );
 
     await this.repository.update(Number(id), { status: 'REFUNDED' });
 

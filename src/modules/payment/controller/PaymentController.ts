@@ -27,11 +27,14 @@ import { StripeError } from '../domain/errors/StripeError';
 import { PaymentService } from '../service/PaymentService';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
+import { Logger } from '@nestjs/common';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly service: PaymentService) {}
+
+  private readonly logger: Logger = new Logger(PaymentController.name);
 
   @Post()
   @HttpCode(201)
