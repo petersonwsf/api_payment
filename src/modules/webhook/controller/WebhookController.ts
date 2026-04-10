@@ -12,12 +12,15 @@ import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 import Stripe from 'stripe';
 import { env } from 'process';
 import { ProcessWebhookService } from '../service/ProcessWebhookService';
+import { RABBITMQ_SERVICE } from 'src/common/rabbitmq/rabbitmq.constants';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Controller('webhook')
 export class WebhookController {
   constructor(
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
     private readonly service: ProcessWebhookService,
+    @Inject(RABBITMQ_SERVICE) private readonly rabbitmq: ClientProxy,
   ) {}
 
   @Post('/confirm')
@@ -35,9 +38,7 @@ export class WebhookController {
         env.STRIPE_WEBHOOK_SECRET!,
       );
     } catch (error) {
-      throw new BadRequestException(
-        `Signature validation failed ${error.message}`,
-      );
+      throw new BadRequestException(`Signature validation failed ${error}`);
     }
 
     await this.service.execute(event);
