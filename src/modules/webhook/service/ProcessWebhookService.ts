@@ -70,7 +70,7 @@ export class ProcessWebhookService {
         default:
           await this.repository.processWebhook(webhook.id, 'IGNORED');
       }
-    } catch (error) {
+    } catch (error: any) {
       await this.repository.processWebhook(webhook.id, 'FAILED', error.message);
       throw error;
     }
