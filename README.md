@@ -252,7 +252,7 @@ RABBITMQ_QUEUE=reservations
 - Node.js 20+
 - Docker e Docker Compose
 
-### Com Docker Compose
+### Para iniciar banco de dados e rabbitmq
 
 ```bash
 docker-compose up -d
