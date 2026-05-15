@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Service Payment
 
 Este é um microsserviço de pagamentos para o sistema de hotelaria, construído com **NestJS**, **Fastify**, **Prisma ORM**, **Stripe** para processamento de pagamentos e **RabbitMQ** para mensageria assíncrona. O serviço gerencia a criação de intenções de pagamento, captura, reembolsos (refunds) e possui webhooks integrados ao Stripe para a confirmação de transações.
@@ -56,6 +57,7 @@ O projeto inclui um arquivo `docker-compose.yml` já pré-configurado com Postgr
 docker-compose up -d
 ```
 
+<<<<<<< HEAD
 ### 4. Aplicar Migrations do Prisma
 
 Com a infraestrutura de banco de dados rodando, aplique as migrações para criar as tabelas necessárias:
