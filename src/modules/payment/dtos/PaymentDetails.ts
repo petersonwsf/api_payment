@@ -10,14 +10,3 @@ export interface PaymentDetails {
   status: string;
   captureMethod: CaptureMethod;
 }
-
-/* 
-
-"paymentId": 123,
-  "paymentIntentId": "pi_...",
-  "clientSecret": "pi_..._secret_...",
-  "status": "requires_payment_method",
-  "amount": 5050,
-  "currency": "brl",
-  "reservationId": 987,
-  "captureMethod": "MANUAL"*/
