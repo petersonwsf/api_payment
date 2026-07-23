@@ -34,6 +34,8 @@ model Payment {
   captureMethod         CaptureMethod
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  boletoUrl             String?
+  codeBar               String?
 }
 
 enum WebhookProcessStatus {

@@ -6,7 +6,10 @@ import { PaymentNotFound } from '../domain/errors/PaymentNotFound';
 import { PaymentCaptureDTO } from '../dtos/PaymentCaptureDTO';
 import * as zod from 'zod';
 import { Method } from '../domain/enums/Method';
-import { IPayementStrategy } from '../strategies/interfaces/IPaymentStrategy';
+import {
+  IPayementStrategy,
+  PaymentResult,
+} from '../strategies/interfaces/IPaymentStrategy';
 import { CardPayment } from '../strategies/CardPayment';
 import { BoletoPayment } from '../strategies/BoletoPayment';
 import { CaptureMethod, PaymentStatus, Prisma } from '@prisma/client';
@@ -109,15 +112,16 @@ export class AmountCaptureService {
           ? CaptureMethod.MANUAL
           : CaptureMethod.AUTOMATIC;
 
-      const stripeNewPayment: Stripe.Response<Stripe.PaymentIntent> =
-        await paymentMethod.createPayment({
+      const stripeNewPayment: PaymentResult = await paymentMethod.createPayment(
+        {
           amount: remainder,
           currency: payment.currency,
           reservationId: payment.reservationId,
-        });
+        },
+      );
 
       this.logger.log(
-        `New payment intent with ID ${stripeNewPayment.id} created successfully for amount ${remainder} cents`,
+        `New payment intent with ID ${stripeNewPayment.paymentIntent.id} created successfully for amount ${remainder} cents`,
       );
 
       const newPayment: Prisma.PaymentCreateInput = {
@@ -127,7 +131,9 @@ export class AmountCaptureService {
         reservationId: payment.reservationId,
         captureMethod: captureMethod,
         status: PaymentStatus.CREATED,
-        stripePaymentIntentId: stripeNewPayment.id,
+        stripePaymentIntentId: stripeNewPayment.paymentIntent.id,
+        boletoUrl: stripeNewPayment.boletoUrl,
+        codeBar: stripeNewPayment.codeBar,
       };
 
       const paymentRecord = await this.repository.create(newPayment);

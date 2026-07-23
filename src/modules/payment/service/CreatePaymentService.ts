@@ -7,7 +7,10 @@ import { Prisma } from '@prisma/client';
 import { PaymentStatus, CaptureMethod } from '@prisma/client';
 import { PaymentRepository } from '../repository/PaymentRepository';
 import { Method } from '../domain/enums/Method';
-import { IPayementStrategy } from '../strategies/interfaces/IPaymentStrategy';
+import {
+  IPayementStrategy,
+  PaymentResult,
+} from '../strategies/interfaces/IPaymentStrategy';
 import { CardPayment } from '../strategies/CardPayment';
 import { BoletoPayment } from '../strategies/BoletoPayment';
 import { CreatePaymentIntent } from '../dtos/CreatePaymentIntent';
@@ -50,20 +53,22 @@ export class CreatePaymentService {
         ? CaptureMethod.MANUAL
         : CaptureMethod.AUTOMATIC;
 
-    const paymentIntent: Stripe.Response<Stripe.PaymentIntent> =
+    const paymentIntent: PaymentResult =
       await paymentMethod.createPayment(dataValid);
     this.logger.log(
-      `Payment Intent created successfully with ID ${paymentIntent.id} for reservation ID ${dataValid.reservationId} and amount ${dataValid.amount} cents`,
+      `Payment Intent created successfully with ID ${paymentIntent.paymentIntent.id} for reservation ID ${dataValid.reservationId} and amount ${dataValid.amount} cents`,
     );
 
     const paymentData: Prisma.PaymentCreateInput = {
       reservationId: dataValid.reservationId,
-      stripePaymentIntentId: paymentIntent.id,
+      stripePaymentIntentId: paymentIntent.paymentIntent.id,
       userId: dataValid.userId,
       amountAuthorized: valueInCents,
       amountCaptured: 0,
       status: PaymentStatus.CREATED,
       captureMethod: captureMethod,
+      boletoUrl: paymentIntent.boletoUrl ?? null,
+      codeBar: paymentIntent.codeBar ?? null,
     };
 
     const payment = await this.repository.create(paymentData);
@@ -72,7 +77,7 @@ export class CreatePaymentService {
     );
 
     return {
-      clientSecret: paymentIntent.client_secret,
+      clientSecret: paymentIntent.paymentIntent.client_secret,
       ...payment,
     };
   }

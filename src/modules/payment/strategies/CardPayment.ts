@@ -1,5 +1,8 @@
 import Stripe from 'stripe';
-import { IPayementStrategy } from './interfaces/IPaymentStrategy';
+import {
+  IPayementStrategy,
+  PaymentResult,
+} from './interfaces/IPaymentStrategy';
 import { Inject, Injectable } from '@nestjs/common';
 import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 
@@ -7,9 +10,7 @@ import { STRIPE_CLIENT } from 'src/common/stripe/stripe.constants';
 export class CardPayment implements IPayementStrategy {
   constructor(@Inject(STRIPE_CLIENT) private readonly stripe: Stripe) {}
 
-  async createPayment(
-    data: any,
-  ): Promise<Stripe.Response<Stripe.PaymentIntent>> {
+  async createPayment(data: any): Promise<PaymentResult> {
     const paymentIntent = await this.stripe.paymentIntents.create({
       amount: data.amount,
       currency: data.currency ?? 'brl',
@@ -20,6 +21,10 @@ export class CardPayment implements IPayementStrategy {
       },
     });
 
-    return paymentIntent;
+    return {
+      paymentIntent,
+      boletoUrl: undefined,
+      codeBar: undefined,
+    };
   }
 }
