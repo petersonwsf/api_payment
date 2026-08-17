@@ -15,6 +15,7 @@ import { CardPayment } from '../strategies/CardPayment';
 import { BoletoPayment } from '../strategies/BoletoPayment';
 import { CreatePaymentIntent } from '../dtos/CreatePaymentIntent';
 import { Logger } from '@nestjs/common';
+import { PaymentDetails } from '../dtos/PaymentDetails';
 
 const schemaValidation = z.object({
   reservationId: z.number(),
@@ -36,7 +37,7 @@ export class CreatePaymentService {
 
   private readonly logger = new Logger(CreatePaymentService.name);
 
-  async execute(data: CreatePaymentIntent) {
+  async execute(data: CreatePaymentIntent) : Promise<PaymentDetails> {
     const dataValid = schemaValidation.parse(data);
 
     if (dataValid.amount <= 0) throw new AmountZero();
@@ -78,6 +79,7 @@ export class CreatePaymentService {
 
     return {
       clientSecret: paymentIntent.paymentIntent.client_secret,
+      amount: valueInCents,
       ...payment,
     };
   }

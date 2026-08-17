@@ -35,13 +35,19 @@ export class FindPaymentByIdService {
 
     const paymentDetails: PaymentDetails = {
       id: payment.id,
+      amount: stripePaymentIntent.amount,
+      captureMethod: payment.captureMethod,
+      reservationId: payment.reservationId,
+      status: stripePaymentIntent.status,
+      amountAuthorized: payment.amountAuthorized,
+      amountCaptured: payment.amountCaptured,
+      currency: payment.currency,
+      createdAt: payment.createdAt,
+      updatedAt: payment.updatedAt,
+      codeBar: payment.codeBar ?? undefined,
+      boletoUrl: payment.boletoUrl ?? undefined,
       stripePaymentIntentId: payment.stripePaymentIntentId,
       clientSecret: stripePaymentIntent.client_secret,
-      reservationId: payment.reservationId,
-      amount: payment.amountAuthorized,
-      currency: payment.currency,
-      status: stripePaymentIntent.status,
-      captureMethod: payment.captureMethod,
     };
 
     return paymentDetails;
