@@ -9,4 +9,8 @@ export interface PaymentListResponse {
   currency: string;
   createdAt: Date;
   updatedAt: Date;
+  codeBar?: string;
+  boletoUrl?: string;
+  stripePaymentIntentId: string;
+  clientSecret: string;
 }

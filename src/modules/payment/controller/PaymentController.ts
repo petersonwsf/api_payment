@@ -71,8 +71,8 @@ export class PaymentController {
   async findPaymentByReservationId(@Param() params: { reservationId: string }) {
     try {
       const reservationId = params.reservationId;
-      const payments = await this.service.findByReservationId(reservationId);
-      return payments;
+      const payment = await this.service.findByReservationId(reservationId);
+      return payment;
     } catch (error) {
       if (error instanceof ReservationPaymentNotFound)
         throw new NotFoundException(error.message);

@@ -6,7 +6,13 @@ export interface PaymentDetails {
   clientSecret: string | null;
   reservationId: number;
   amount: number;
+  amountAuthorized: number;
+  amountCaptured: number;
+  createdAt: Date;
+  updatedAt: Date;
   currency: string;
   status: string;
   captureMethod: CaptureMethod;
+  codeBar?: string | null;
+  boletoUrl?: string | null;
 }
